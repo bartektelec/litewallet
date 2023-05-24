@@ -4,9 +4,11 @@ use rocket::*;
 mod common;
 mod routes;
 mod schema;
+mod services;
 
-use crate::common::{db, models};
-use crate::schema::users;
+use common::{db, models};
+use routes::auth;
+use schema::users;
 
 #[get("/")]
 fn index() -> String {
@@ -15,17 +17,12 @@ fn index() -> String {
     let connection = &mut db::establish_connection();
 
     let new_user = models::NewUser {
-        id: 0,
         username: "bartek",
         pass: "12345",
     };
 
-    diesel::insert_into(crate::schema::users::table)
-        .values(&new_user)
-        .get_result(connection)
-        .expect("error saving");
-
     let results = users
+        .filter(id.gt(1))
         .load::<models::User>(connection)
         .expect("error loading user");
 
@@ -36,6 +33,6 @@ fn index() -> String {
 fn rocket() -> _ {
     rocket::build().mount("/", routes![index]).mount(
         "/auth",
-        routes![routes::auth::get_me, routes::auth::post_signin],
+        routes![auth::get_me, auth::post_signin, auth::post_signup],
     )
 }

@@ -3,6 +3,9 @@ use rocket::http::{Cookie, CookieJar};
 use rocket::serde::{json::Json, Deserialize};
 use rocket::*;
 
+use crate::services::user;
+use sha256::digest;
+
 #[get("/me")]
 pub async fn get_me(jar: &CookieJar<'_>) -> String {
     let opt_name = jar.get("name");
@@ -28,4 +31,18 @@ pub async fn post_signin(cookies: &CookieJar<'_>, creds: Json<Credentials<'_>>) 
     cookies.add(Cookie::new("name", "bartek"));
 
     "Logged in"
+}
+
+#[post("/signup", data = "<creds>")]
+pub async fn post_signup(cookies: &CookieJar<'_>, creds: Json<Credentials<'_>>) -> String {
+    cookies.add(Cookie::new("name", "bartek"));
+
+    let hashed_pass = digest(creds.pass);
+
+    let result = user::create(creds.username, digest(creds.pass));
+
+    match result {
+        Ok(_) => "Ok".into(),
+        Err(err) => err.to_string(),
+    }
 }
