@@ -16,13 +16,7 @@ fn index() -> String {
 
     let connection = &mut db::establish_connection();
 
-    let new_user = models::NewUser {
-        username: "bartek",
-        pass: "12345",
-    };
-
     let results = users
-        .filter(id.gt(1))
         .load::<models::User>(connection)
         .expect("error loading user");
 

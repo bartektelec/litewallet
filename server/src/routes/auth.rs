@@ -1,22 +1,15 @@
-use rocket::data::FromData;
 use rocket::http::{Cookie, CookieJar};
 use rocket::serde::{json::Json, Deserialize};
 use rocket::*;
 
 use crate::services::user;
+use rocket::response::status::{BadRequest, NotFound};
 use sha256::digest;
 
 #[get("/me")]
-pub async fn get_me(jar: &CookieJar<'_>) -> String {
-    let opt_name = jar.get("name");
-
-    if let Some(v) = opt_name {
-        let name = v.value();
-
-        return format!("Hello you {}", name);
-    } else {
-        return "Not logged in".into();
-    }
+pub async fn get_me(jar: &CookieJar<'_>) -> Result<String, NotFound<()>> {
+    let opt_name = jar.get("sid").ok_or(NotFound(None))?;
+    let session_id = opt_name.value();
 }
 
 #[derive(Deserialize)]
@@ -27,22 +20,34 @@ pub struct Credentials<'t> {
 }
 
 #[post("/signin", data = "<creds>")]
-pub async fn post_signin(cookies: &CookieJar<'_>, creds: Json<Credentials<'_>>) -> &'static str {
-    cookies.add(Cookie::new("name", "bartek"));
+pub fn post_signin(
+    cookies: &CookieJar<'_>,
+    creds: Json<Credentials<'_>>,
+) -> Result<String, BadRequest<()>> {
+    let found = user::get_by_name(creds.username).map_err(|_| BadRequest(None))?;
 
-    "Logged in"
+    println!("found user {:?}", found);
+    let hashed_pass = digest(creds.pass);
+
+    if hashed_pass != found.pass {
+        return Err(BadRequest(None));
+    }
+
+    let session = user::generate_session(found.id).map_err(|_| BadRequest(None))?;
+
+    cookies.add(Cookie::new("sid", session));
+
+    Ok("Logged in".to_string())
 }
 
 #[post("/signup", data = "<creds>")]
-pub async fn post_signup(cookies: &CookieJar<'_>, creds: Json<Credentials<'_>>) -> String {
-    cookies.add(Cookie::new("name", "bartek"));
-
+pub async fn post_signup(creds: Json<Credentials<'_>>) -> Result<String, BadRequest<String>> {
     let hashed_pass = digest(creds.pass);
 
-    let result = user::create(creds.username, digest(creds.pass));
+    let user_result =
+        user::create(creds.username, hashed_pass).map_err(|e| BadRequest(Some(e.to_string())))?;
 
-    match result {
-        Ok(_) => "Ok".into(),
-        Err(err) => err.to_string(),
-    }
+    user::create_session(user_result.id).map_err(|e| BadRequest(Some(e.to_string())))?;
+
+    Ok("Ok".to_string())
 }
