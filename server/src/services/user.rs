@@ -92,17 +92,17 @@ pub fn generate_session(input_user_id: i32) -> Result<String, result::Error> {
     Ok(s_id)
 }
 
-pub fn retrieve_user_from_sid(s_id: String) -> Result<models::User, result::Error> {
-    let found_session = get_session_by_sid(s_id)?;
+pub fn retrieve_user_from_sid<T: AsRef<str>>(s_id: T) -> Result<models::User, result::Error> {
+    let found_session = get_session_by_sid(s_id.as_ref())?;
 
     get_by_id(found_session.id)
 }
 
-pub fn get_session_by_sid(s_id: String) -> Result<models::Session, result::Error> {
+pub fn get_session_by_sid<T: AsRef<str>>(s_id: T) -> Result<models::Session, result::Error> {
     use crate::schema::sessions::dsl::*;
     let conn = &mut db::establish_connection();
 
-    let results: Vec<models::Session> = sessions.filter(session_id.eq(s_id)).load(conn)?;
+    let results: Vec<models::Session> = sessions.filter(session_id.eq(s_id.as_ref())).load(conn)?;
 
     match results.into_iter().nth(0) {
         Some(v) => Ok(v),

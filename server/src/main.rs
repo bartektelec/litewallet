@@ -5,8 +5,10 @@ mod common;
 mod routes;
 mod schema;
 mod services;
+mod utils;
 
 use common::{db, models};
+use routes::accounts;
 use routes::auth;
 use schema::users;
 
@@ -25,8 +27,19 @@ fn index() -> String {
 
 #[launch]
 fn rocket() -> _ {
-    rocket::build().mount("/", routes![index]).mount(
-        "/auth",
-        routes![auth::get_me, auth::post_signin, auth::post_signup],
-    )
+    rocket::build()
+        .mount("/", routes![index])
+        .mount(
+            "/account",
+            routes![accounts::post_account, accounts::get_accounts],
+        )
+        .mount(
+            "/auth",
+            routes![
+                auth::get_me,
+                auth::get_signout,
+                auth::post_signin,
+                auth::post_signup
+            ],
+        )
 }

@@ -8,8 +8,13 @@ use sha256::digest;
 
 #[get("/me")]
 pub async fn get_me(jar: &CookieJar<'_>) -> Result<String, NotFound<()>> {
-    let opt_name = jar.get("sid").ok_or(NotFound(None))?;
-    let session_id = opt_name.value();
+    let opt_name = jar.get("sid");
+    let sid = opt_name.ok_or(NotFound(()))?;
+    let session_id = sid.value();
+
+    let result = user::retrieve_user_from_sid(session_id);
+
+    result.map(|s| format!("{:?}", s)).map_err(|_| NotFound(()))
 }
 
 #[derive(Deserialize)]
@@ -17,6 +22,15 @@ pub async fn get_me(jar: &CookieJar<'_>) -> Result<String, NotFound<()>> {
 pub struct Credentials<'t> {
     username: &'t str,
     pass: &'t str,
+}
+
+#[get("/signout")]
+pub fn get_signout(jar: &CookieJar<'_>) -> Option<String> {
+    jar.get("sid")?;
+
+    jar.remove(Cookie::named("sid"));
+
+    Some("Ok".to_string())
 }
 
 #[post("/signin", data = "<creds>")]
