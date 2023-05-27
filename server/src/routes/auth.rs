@@ -3,7 +3,6 @@ use rocket::serde::json::Json;
 use rocket::serde::{Deserialize, Serialize};
 use rocket::*;
 
-use crate::common::models::User;
 use crate::services::user;
 use rocket::response::status::{BadRequest, NotFound};
 use sha256::digest;
@@ -11,7 +10,8 @@ use sha256::digest;
 #[derive(Serialize, Deserialize)]
 #[serde(crate = "rocket::serde")]
 pub struct GetMeResponse {
-    data: User,
+    id: i32,
+    username: String,
 }
 
 #[get("/me")]
@@ -24,18 +24,13 @@ pub async fn get_me(jar: &CookieJar<'_>) -> Result<Json<GetMeResponse>, NotFound
 
     let me = result.map_err(|_| NotFound(()))?;
 
-    let response = GetMeResponse { data: me };
+    let response = GetMeResponse {
+        id: me.id,
+        username: me.username,
+    };
 
     Ok(response.into())
 }
-
-#[derive(Deserialize)]
-#[serde(crate = "rocket::serde")]
-pub struct Credentials<'t> {
-    username: &'t str,
-    pass: &'t str,
-}
-
 #[get("/signout")]
 pub fn get_signout(jar: &CookieJar<'_>) -> Option<()> {
     jar.get("sid")?;
@@ -43,6 +38,13 @@ pub fn get_signout(jar: &CookieJar<'_>) -> Option<()> {
     jar.remove(Cookie::named("sid"));
 
     Some(())
+}
+
+#[derive(Deserialize)]
+#[serde(crate = "rocket::serde")]
+pub struct Credentials<'t> {
+    username: &'t str,
+    pass: &'t str,
 }
 
 #[post("/signin", data = "<creds>")]
@@ -64,7 +66,10 @@ pub fn post_signin(
 
     let me = user::get_by_name(creds.username).map_err(|_| BadRequest(None))?;
 
-    let response = GetMeResponse { data: me };
+    let response = GetMeResponse {
+        id: me.id,
+        username: me.username,
+    };
 
     Ok(response.into())
 }
@@ -82,7 +87,10 @@ pub async fn post_signup(
 
     let me = user::get_by_name(creds.username).map_err(|_| BadRequest(None))?;
 
-    let response = GetMeResponse { data: me };
+    let response = GetMeResponse {
+        id: me.id,
+        username: me.username,
+    };
 
     Ok(response.into())
 }

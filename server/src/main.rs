@@ -10,7 +10,6 @@ mod utils;
 use common::{db, models};
 use routes::accounts;
 use routes::auth;
-use schema::users;
 
 #[get("/")]
 fn index() -> String {
@@ -31,7 +30,11 @@ fn rocket() -> _ {
         .mount("/", routes![index])
         .mount(
             "/account",
-            routes![accounts::post_account, accounts::get_accounts],
+            routes![
+                accounts::post_account,
+                accounts::get_accounts,
+                accounts::post_transfer
+            ],
         )
         .mount(
             "/auth",

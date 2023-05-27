@@ -48,3 +48,34 @@ pub async fn get_accounts(jar: &CookieJar<'_>) -> Option<Json<GetAllResponse>> {
 
     Some(GetAllResponse { data: accounts }.into())
 }
+
+#[derive(Deserialize)]
+#[serde(crate = "rocket::serde")]
+pub struct TransferBody {
+    from_acc: String,
+    to_acc: String,
+    amount: String,
+}
+
+#[post("/transfer", data = "<data>")]
+pub async fn post_transfer(jar: &CookieJar<'_>, data: Json<TransferBody>) -> Option<()> {
+    let opt_name = jar.get("sid")?;
+    let session_id = opt_name.value();
+
+    let user = services::user::retrieve_user_from_sid(session_id).ok()?;
+
+    // check if user is owner of the account
+
+    let all_users_accounts = services::account::get_acc_list(user.id);
+
+    if let None = all_users_accounts
+        .iter()
+        .find(|acc| acc.account_number == data.from_acc)
+    {
+        return None;
+    }
+
+    services::transfer::transfer(&data.from_acc, &data.to_acc, &data.amount).ok()?;
+
+    Some(())
+}
