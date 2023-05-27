@@ -1,36 +1,41 @@
 use crate::schema::{accounts, actions, sessions, users};
-
 use diesel::prelude::*;
+use rocket::serde::{Deserialize, Serialize};
 
-#[derive(Queryable, Identifiable, Debug)]
+#[derive(Queryable, Identifiable, Debug, Serialize, Deserialize)]
+#[serde(crate = "rocket::serde")]
 pub struct User {
     pub id: i32,
     pub username: String,
     pub pass: String,
 }
 
-#[derive(Insertable)]
+#[derive(Insertable, Serialize, Deserialize)]
+#[serde(crate = "rocket::serde")]
 #[diesel(table_name = users)]
 pub struct NewUser<'a> {
     pub username: &'a str,
     pub pass: &'a str,
 }
 
-#[derive(Queryable, Identifiable, Debug)]
+#[derive(Queryable, Identifiable, Serialize, Deserialize, Debug)]
+#[serde(crate = "rocket::serde")]
 pub struct Session {
     pub id: i32,
     pub user_id: i32,
     pub session_id: Option<String>,
 }
 
-#[derive(Insertable)]
+#[derive(Insertable, Serialize, Deserialize)]
+#[serde(crate = "rocket::serde")]
 #[diesel(table_name = sessions)]
 pub struct NewSession {
     pub user_id: i32,
     pub session_id: Option<String>,
 }
 
-#[derive(Queryable, Identifiable, Debug)]
+#[derive(Queryable, Identifiable, Debug, Serialize, Deserialize)]
+#[serde(crate = "rocket::serde")]
 pub struct Account {
     pub id: i32,
     pub owner_id: i32,
@@ -46,7 +51,8 @@ pub struct NewAccount<'t> {
     pub account_number: &'t String,
 }
 
-#[derive(Queryable, Identifiable, Debug)]
+#[derive(Queryable, Identifiable, Debug, Deserialize, Serialize)]
+#[serde(crate = "rocket::serde")]
 pub struct Action {
     pub id: i32,
     pub created_at: String,
@@ -55,7 +61,8 @@ pub struct Action {
     pub amount: String,
 }
 
-#[derive(Insertable)]
+#[derive(Insertable, Deserialize, Serialize)]
+#[serde(crate = "rocket::serde")]
 #[diesel(table_name = actions)]
 pub struct NewAction<'t> {
     pub created_at: &'t str,

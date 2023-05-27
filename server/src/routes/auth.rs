@@ -1,20 +1,32 @@
 use rocket::http::{Cookie, CookieJar};
-use rocket::serde::{json::Json, Deserialize};
+use rocket::serde::json::Json;
+use rocket::serde::{Deserialize, Serialize};
 use rocket::*;
 
+use crate::common::models::User;
 use crate::services::user;
 use rocket::response::status::{BadRequest, NotFound};
 use sha256::digest;
 
+#[derive(Serialize, Deserialize)]
+#[serde(crate = "rocket::serde")]
+pub struct GetMeResponse {
+    data: User,
+}
+
 #[get("/me")]
-pub async fn get_me(jar: &CookieJar<'_>) -> Result<String, NotFound<()>> {
+pub async fn get_me(jar: &CookieJar<'_>) -> Result<Json<GetMeResponse>, NotFound<()>> {
     let opt_name = jar.get("sid");
     let sid = opt_name.ok_or(NotFound(()))?;
     let session_id = sid.value();
 
     let result = user::retrieve_user_from_sid(session_id);
 
-    result.map(|s| format!("{:?}", s)).map_err(|_| NotFound(()))
+    let me = result.map_err(|_| NotFound(()))?;
+
+    let response = GetMeResponse { data: me };
+
+    Ok(response.into())
 }
 
 #[derive(Deserialize)]
@@ -25,22 +37,21 @@ pub struct Credentials<'t> {
 }
 
 #[get("/signout")]
-pub fn get_signout(jar: &CookieJar<'_>) -> Option<String> {
+pub fn get_signout(jar: &CookieJar<'_>) -> Option<()> {
     jar.get("sid")?;
 
     jar.remove(Cookie::named("sid"));
 
-    Some("Ok".to_string())
+    Some(())
 }
 
 #[post("/signin", data = "<creds>")]
 pub fn post_signin(
     cookies: &CookieJar<'_>,
     creds: Json<Credentials<'_>>,
-) -> Result<String, BadRequest<()>> {
+) -> Result<Json<GetMeResponse>, BadRequest<()>> {
     let found = user::get_by_name(creds.username).map_err(|_| BadRequest(None))?;
 
-    println!("found user {:?}", found);
     let hashed_pass = digest(creds.pass);
 
     if hashed_pass != found.pass {
@@ -51,11 +62,17 @@ pub fn post_signin(
 
     cookies.add(Cookie::new("sid", session));
 
-    Ok("Logged in".to_string())
+    let me = user::get_by_name(creds.username).map_err(|_| BadRequest(None))?;
+
+    let response = GetMeResponse { data: me };
+
+    Ok(response.into())
 }
 
 #[post("/signup", data = "<creds>")]
-pub async fn post_signup(creds: Json<Credentials<'_>>) -> Result<String, BadRequest<String>> {
+pub async fn post_signup(
+    creds: Json<Credentials<'_>>,
+) -> Result<Json<GetMeResponse>, BadRequest<String>> {
     let hashed_pass = digest(creds.pass);
 
     let user_result =
@@ -63,5 +80,9 @@ pub async fn post_signup(creds: Json<Credentials<'_>>) -> Result<String, BadRequ
 
     user::create_session(user_result.id).map_err(|e| BadRequest(Some(e.to_string())))?;
 
-    Ok("Ok".to_string())
+    let me = user::get_by_name(creds.username).map_err(|_| BadRequest(None))?;
+
+    let response = GetMeResponse { data: me };
+
+    Ok(response.into())
 }
