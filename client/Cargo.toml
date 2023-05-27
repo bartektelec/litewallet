@@ -1,11 +1,27 @@
 [package]
-name = "client"
 version = "0.1.0"
-edition = "2021"
+name = "client"
+repository = "https://github.com/seed-rs/seed-quickstart"
+authors = ["Bartek Telec <bartektelec@gmail.com>"]
+description = "App Description"
+categories = ["category"]
+license = "MIT"
+readme = "./README.md"
+edition = "2018"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[lib]
+crate-type = ["cdylib"]
+
+[dev-dependencies]
+wasm-bindgen-test = "0.3.18"
 
 [dependencies]
-envy = "0.4.2"
-serde = { version = "1.0.163", features = ["derive"] }
-serde_json = "1.0.96"
+seed = "0.8.0"
+
+[profile.release]
+lto = true
+opt-level = 'z'
+codegen-units = 1
+
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = ['-Os']

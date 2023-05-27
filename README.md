@@ -5,6 +5,13 @@ This is a side-project and it's code _should not be used in production_ due to i
 The project is more of a proof-of-concept and an exercise to learn using Rust in a bigger scale.
 There are lots of shortcuts that have been taken, the app is supposed to be as simple as possible.
 
+## How to run
+
+1. Server:
+   `cargo run`
+2. Client:
+   `cargo make serve`
+
 ## Backend
 
 The server is built using `rocket-rs`, using a minimal setup with `serde` and `diesel-rs` for data fetching from a SQLite database.
@@ -23,3 +30,9 @@ There are potential flaws with the accounts logic both related to how it was imp
 SQLite (with diesel) only allows storing integers that are signed and 32bit. This doesn't allow us to store 11-digit long account numbers as integers in the database.
 Same thing applies to account balance, floats and big numbers aren't meant to be stored so just for simplicity sake these are stored as TEXT type and parsed during API calls.
 Using a more powerful database could be a better decision for a production faced app. However SQLite is just fine for small projects like this one.
+
+## Client
+
+### Structure
+
+The client app uses `seed-rs` to render a reactive frontend web app, it follows an Elm-inspired architecture.
