@@ -1,12 +1,10 @@
-use rocket::http::{Cookie, CookieJar};
-use rocket::serde::json::{json, Json, Value};
+use rocket::http::CookieJar;
+use rocket::serde::json::Json;
 use rocket::serde::{Deserialize, Serialize};
 use rocket::*;
 
 use crate::common::models::Account;
-use crate::common::{db, models};
 use crate::services;
-use rocket::response::status::{BadRequest, NotFound};
 
 #[derive(Serialize, Deserialize)]
 #[serde(crate = "rocket::serde")]
@@ -75,7 +73,5 @@ pub async fn post_transfer(jar: &CookieJar<'_>, data: Json<TransferBody>) -> Opt
         return None;
     }
 
-    services::transfer::transfer(&data.from_acc, &data.to_acc, &data.amount).ok()?;
-
-    Some(())
+    services::transfer::transfer(&data.from_acc, &data.to_acc, &data.amount).ok()
 }

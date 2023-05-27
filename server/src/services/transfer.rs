@@ -1,10 +1,7 @@
 use diesel::prelude::*;
-use diesel::result;
 
-use crate::common::{db, models};
-use crate::schema::accounts;
+use crate::common::db::establish_connection;
 use crate::services::account;
-use crate::utils::generate_acc_num::generate_acc_num;
 
 pub fn transfer(from_acc_id: &String, to_acc_id: &String, amount: &String) -> Result<(), String> {
     let to_acc = account::get_account_by_acc_id(to_acc_id)
@@ -33,6 +30,24 @@ pub fn transfer(from_acc_id: &String, to_acc_id: &String, amount: &String) -> Re
 
     let after_from_balance = from_acc_balance - amount_num;
     let after_to_balance = to_acc_balance + amount_num;
+
+    let connection = &mut establish_connection();
+
+    use crate::schema::accounts::dsl::*;
+    connection
+        .transaction(|conn| {
+            diesel::update(accounts)
+                .filter(account_number.eq(from_acc_id))
+                .set(balance.eq(after_from_balance.to_string()))
+                .execute(conn)?;
+            diesel::update(accounts)
+                .filter(account_number.eq(to_acc_id))
+                .set(balance.eq(after_to_balance.to_string()))
+                .execute(conn)?;
+
+            diesel::result::QueryResult::Ok(())
+        })
+        .map_err(|_| "Updating account balance failed".to_string())?;
 
     Ok(())
 }
