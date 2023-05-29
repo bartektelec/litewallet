@@ -16,8 +16,10 @@ crate-type = ["cdylib"]
 wasm-bindgen-test = "0.3.18"
 
 [dependencies]
-reqwest = "0.11.18"
+reqwest = { version = "0.11.18", features = ["json", "blocking"] }
 seed = "0.8.0"
+serde = {version = "1.0.163", features = ["derive"] }
+serde_json = "1.0.96"
 
 [profile.release]
 lto = true

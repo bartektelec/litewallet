@@ -5,6 +5,7 @@
 
 use reqwest;
 use seed::{prelude::*, *};
+use serde::{Deserialize, Serialize};
 mod counter;
 
 // ------ ------
@@ -28,22 +29,26 @@ fn init(_: Url, _: &mut impl Orders<Msg>) -> Model {
 //     Model
 // ------ ------
 
+#[derive(Serialize, Deserialize)]
 struct LoginForm {
     username: String,
     password: String,
 }
 
+#[derive(Serialize, Deserialize)]
 struct Account {
     account_number: String,
     balance: String,
 }
 
+#[derive(Serialize, Deserialize)]
 struct User {
     username: String,
     id: i32,
     accounts: Vec<Account>,
 }
 
+#[derive(Serialize, Deserialize)]
 struct Model {
     counters: Vec<counter::Model>,
     text: String,
@@ -73,19 +78,32 @@ fn login_form(model: &Model) -> Node<Msg> {
         ];
     } else {
         div![
+            C!["flex flex-col gap-4 max-w-prose mx-auto"],
             label![
+                C!["flex flex-col gap-2"],
                 plain!["Username"],
-                input![attrs![
-                    At::Type => "text"
-                ]]
+                input![
+                    C!["border p-1 rounded"],
+                    attrs![
+                        At::Type => "text"
+                    ]
+                ]
             ],
             label![
+                C!["flex flex-col gap-2"],
                 plain!["Password"],
-                input![attrs![
-                    At::Type => "password"
-                ]]
+                input![
+                    C!["border p-1 rounded"],
+                    attrs![
+                        At::Type => "password"
+                    ]
+                ]
             ],
-            button![ev(Ev::Click, |_| Msg::SubmitLogin), "Login"]
+            button![
+                C!["rounded bg-blue-500 text-white font-semibold p-2"],
+                ev(Ev::Click, |_| Msg::SubmitLogin),
+                "Login"
+            ]
         ]
     }
 }
@@ -137,6 +155,12 @@ fn app_body(model: &Model) -> Node<Msg> {
 }
 
 fn perform_login_user(model: &mut Model) {
+    let client = blocking::Client::new();
+    let url = "http://localhost:5000/auth/signin";
+    let resp = client.post(url).json(&model.login_form).send();
+
+    println!("{:?}", resp);
+
     model.user_data = Some(User {
         id: 1,
         username: "bartek".to_string(),
