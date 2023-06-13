@@ -2,6 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
+body {
+  @apply grid grid-rows-[auto,_1fr,auto] min-h-screen;
+}
+
 .btn {
   @apply py-1.5 px-3 rounded hover:bg-opacity-90;
 }
