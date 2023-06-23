@@ -872,6 +872,7 @@ dependencies = [
  "reqwasm",
  "serde",
  "serde_json",
+ "wasm-bindgen",
 ]
 
 [[package]]

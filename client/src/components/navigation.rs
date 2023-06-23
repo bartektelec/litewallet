@@ -2,6 +2,7 @@ use leptos::*;
 use reqwasm::http::*;
 
 use crate::components::modal::*;
+use crate::layouts::*;
 
 #[component]
 pub fn Navigation(cx: Scope) -> impl IntoView {
@@ -16,14 +17,14 @@ pub fn Navigation(cx: Scope) -> impl IntoView {
         is_register_open.set(true);
     };
 
-    let run_req = move |_| {
-        let resp = Request::get("https://swapi.dev/api/people/")
-            .send()
-            .await
-            .unwrap();
-
-        log!("{}", resp.text().await.unwrap());
-    };
+    // let run_req = move |_| {
+    //     let resp = Request::get("https://swapi.dev/api/people/")
+    //         .send()
+    //         .await
+    //         .unwrap();
+    //
+    //     log!("{}", resp.text().await.unwrap());
+    // };
 
     view! {cx,
     <nav class="bg-gray-800 py-3 text-white">
@@ -37,12 +38,10 @@ pub fn Navigation(cx: Scope) -> impl IntoView {
         </div>
         </div>
     </nav>
-    <Modal is_open=is_login_open>
-        "Login modal"
-    </Modal>
+    <LoginModal is_open=is_login_open/>
     <Modal is_open=is_register_open>
         "Register modal"
-        <button on:click=run_req>"Request"</button>
+        // <button on:click=run_req>"Request"</button>
     </Modal>
         }
 }

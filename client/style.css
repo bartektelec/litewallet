@@ -17,3 +17,15 @@ body {
 .btn-secondary {
   @apply bg-gray-100 text-black;
 }
+
+dialog::backdrop {
+  @apply backdrop-blur-[2px] backdrop-grayscale;
+}
+
+label {
+  @apply text-xs uppercase font-semibold flex flex-col gap-1 my-1;
+}
+
+input {
+  @apply border text-base px-1 py-0.5;
+}

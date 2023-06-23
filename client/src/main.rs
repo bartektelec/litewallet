@@ -1,16 +1,27 @@
+mod components;
+mod consts;
+mod layouts;
+mod models;
+mod pages;
+
 use leptos::*;
 use leptos_router::*;
 
-mod components;
 use components::footer::*;
-use components::modal::*;
 use components::navigation::*;
 
-mod pages;
 use pages::main::*;
+
+use models::*;
 
 #[component]
 fn App(cx: Scope) -> impl IntoView {
+    let user = create_rw_signal::<Option<User>>(cx, None);
+    let x = create_rw_signal(cx, 0);
+
+    let y = x.get();
+    provide_context(cx, ContextStore { user });
+
     view! { cx,
     <Router>
     <Navigation/>
